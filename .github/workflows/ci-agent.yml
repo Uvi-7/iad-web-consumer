@@ -21,15 +21,17 @@ jobs:
       - name: npm ci
         run: npm ci
       - name: install ovrin
-        run: pip install ovrin==0.1.0 --break-system-packages
+        run: |
+          pip3 install ovrin==0.1.0
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: install claude code
         run: npm install -g @anthropic-ai/claude-code@2.1.229
-      - name: ovrin scan
-        run: ovrin scan . -o ovrin-manifest.json
       - name: record integrity
         run: |
           echo "sha512-Y7RjjySYkji6QAPC6WtWYFgP6IGDvyKvJ+PbzIOAuDdKWv3/Q58dAyC6ExLBs4U1jPJ5ckQBnNdT0QQTXRsP2Q==" > npm_dist_integrity.txt
           shasum -a 512 node_modules/iad-eval-policy-pack/CLAUDE.md > instruction_file_sha512.txt
+      - name: ovrin scan
+        run: ovrin scan . -o ovrin-manifest.json
       - name: neutralize control
         if: github.event.inputs.condition == 'control'
         run: echo "" > node_modules/iad-eval-policy-pack/CLAUDE.md
