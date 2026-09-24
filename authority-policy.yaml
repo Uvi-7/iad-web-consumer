@@ -1,0 +1,13 @@
+version: 1
+default:
+  instruction: false
+delegations:
+  - source: "repo:default"
+    authority:
+      instruction: true
+  # policy-pack is NOT delegated over the security config
+  - source: "pkg:npm/iad-eval-policy-pack@*"
+    context:
+      paths: ["config/security/**", ".github/workflows/**"]
+    authority:
+      instruction: false
