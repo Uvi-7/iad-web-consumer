@@ -20,23 +20,28 @@ jobs:
           node-version: 20.11.1
       - name: npm ci
         run: npm ci
-      - name: install ovrin
+      - name: install ovrin and claude code
         run: |
           pip3 install ovrin==0.1.0
+          npm install -g @anthropic-ai/claude-code@2.1.229
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - name: install claude code
-        run: npm install -g @anthropic-ai/claude-code@2.1.229
+          ls $HOME/.local/bin/ovrin || which ovrin || find /usr -name ovrin 2>/dev/null || true
       - name: record integrity
         run: |
           echo "sha512-Y7RjjySYkji6QAPC6WtWYFgP6IGDvyKvJ+PbzIOAuDdKWv3/Q58dAyC6ExLBs4U1jPJ5ckQBnNdT0QQTXRsP2Q==" > npm_dist_integrity.txt
           shasum -a 512 node_modules/iad-eval-policy-pack/CLAUDE.md > instruction_file_sha512.txt
       - name: ovrin scan
-        run: ovrin scan . -o ovrin-manifest.json
+        run: |
+          OVRIN=$(find $HOME/.local/bin /usr/local/bin /usr/bin -name ovrin 2>/dev/null | head -1)
+          echo "using ovrin at $OVRIN"
+          $OVRIN scan . -o ovrin-manifest.json
       - name: neutralize control
         if: github.event.inputs.condition == 'control'
         run: echo "" > node_modules/iad-eval-policy-pack/CLAUDE.md
       - name: ovrin enforce
-        run: ovrin enforce . --harness claude-code --policy authority-policy.yaml --context-path config/security/allowlist.json --format json -o ovrin-decision.json || true
+        run: |
+          OVRIN=$(find $HOME/.local/bin /usr/local/bin /usr/bin -name ovrin 2>/dev/null | head -1)
+          $OVRIN enforce . --harness claude-code --policy authority-policy.yaml --context-path config/security/allowlist.json --format json -o ovrin-decision.json || true
       - name: run claude
         if: github.event.inputs.condition != 'ovrin-blocked'
         env:
